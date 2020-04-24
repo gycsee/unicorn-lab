@@ -1,30 +1,13 @@
 import React from 'react';
 import { Route, Switch, useRouteMatch } from 'react-router-dom';
 import loadable from '@loadable/component';
-import { createUseStyles } from 'react-jss';
-import {
-  Layout,
-} from 'antd';
-
-const { Content } = Layout;
 
 const MassMarker = loadable(() => import('./MassMarker'));
 const SingleRoute = loadable(() => import('./SingleRoute'));
 const DoubleRoutes = loadable(() => import('./DoubleRoutes'));
 const MultiRoutes = loadable(() => import('./MultiRoutes'));
 
-const useStyles = createUseStyles({
-  Layout: {
-    width: '100vw',
-    height: '100vh',
-  },
-  Content: {
-    padding: '0 50px',
-  },
-})
-
 const GdPages = () => {
-  const classes = useStyles();
   let { path, url } = useRouteMatch();
   return (
     <Switch>
