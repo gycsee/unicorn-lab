@@ -108,7 +108,6 @@ export function gdPathFetch(key, url, travelWay) {
           distance = json.data.paths[0].distance;
           break;
         case 0:
-          debugger
           steps = _getPolyline(json.route.paths[0].steps);
           distance = json.route.paths[0].distance;
           break;

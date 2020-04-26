@@ -4,6 +4,8 @@ import GdLoading from './GdLoading';
 import GdPanel from './GdPanel';
 import GdInfoWindow from './GdInfoWindow';
 import GdRoute from './GdRoute';
+import GdSetting from './GdSetting';
+import GdMap from './GdMap';
 import config from './config';
 
 export {
@@ -13,5 +15,7 @@ export {
   GdPanel,
   GdInfoWindow,
   GdRoute,
+  GdSetting,
+  GdMap,
   config,
 }
