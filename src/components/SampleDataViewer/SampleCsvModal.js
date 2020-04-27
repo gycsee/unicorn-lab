@@ -33,7 +33,6 @@ const SampleCsvModal = ({
   }
 
   const list = [columns, ...data.map(item => columns.map(column => item[column]))];
-  console.log(list);
   return (
     <>
       <Button type="primary" onClick={handleOpen} {...buttonProps}>

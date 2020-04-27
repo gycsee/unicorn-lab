@@ -33,6 +33,7 @@ const useStyles = createUseStyles({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    overflowY: 'scroll',
     borderRadius: '1px',
     overflow: 'hidden',
     width: props => props.width,
@@ -41,6 +42,7 @@ const useStyles = createUseStyles({
   header: {
     padding: '10px 10px',
     overflow: 'hidden',
+    minHeight: 40,
   },
   children: {
     flexGrow: 1,

@@ -173,6 +173,10 @@ const MultiRoutes = ({ mapStyle }) => {
       )
     }
   ]
+
+  const visibleLength = data
+    ? Object.values(data).filter(item => item.visible).length
+    : 0;
   return (
     <GdLayout>
       <GdContent>
@@ -250,7 +254,8 @@ const MultiRoutes = ({ mapStyle }) => {
                   setFile(file);
                   setRows(rows);
                   setColumns(parsedData.columns);
-                  setData(routesData)
+                  setData(routesData);
+                  setSelectedRowKeys([]);
                 } else {
                   message.error('请确保csv中存在以下列：routeId、longitude、latitude')
                 }
@@ -262,6 +267,7 @@ const MultiRoutes = ({ mapStyle }) => {
                 setRows([]);
                 setColumns([]);
                 setData(null);
+                setSelectedRowKeys([]);
               }}
             >
               <Button type="primary" size="small" icon={<UploadOutlined />}> 
@@ -334,9 +340,9 @@ const MultiRoutes = ({ mapStyle }) => {
                       </div>
                       <div>
                         <Checkbox
-                          indeterminate={Object.values(data).filter(item => item.visible).length > Object.keys(data)}
-                          checked={_.every(Object.values(data), item => item.visible)}
-                          onChange={allVisibleTriggle(_.every(Object.values(data), item => item.visible))}
+                          indeterminate={!!visibleLength && visibleLength < Object.keys(data).length}
+                          checked={visibleLength === Object.keys(data).length}
+                          onChange={allVisibleTriggle(visibleLength === Object.keys(data).length)}
                         >
                           全显示
                         </Checkbox>
