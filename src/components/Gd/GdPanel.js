@@ -43,7 +43,6 @@ const useStyles = createUseStyles({
     overflow: 'hidden',
   },
   children: {
-    padding: '10px 10px',
     flexGrow: 1,
   },
   trigger: {

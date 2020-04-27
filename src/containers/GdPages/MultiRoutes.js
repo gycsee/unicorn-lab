@@ -1,6 +1,6 @@
 import React from 'react';
 import { Map } from 'immutable';
-import { Upload, Button, message, Collapse, Switch, Checkbox, Table, Badge, Typography, Tag } from 'antd';
+import { Upload, Button, message, Collapse, Switch, Checkbox, Table, Badge, Typography, Tag, Form, Input } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { csvParse } from 'd3-dsv';
 import _ from 'lodash';
@@ -23,12 +23,17 @@ import {
   getGdDirectionUrl,
   gdPathFetch,
 } from 'components/Gd/util';
+import SampleDataCard from 'components/SampleDataViewer/SampleDataCard';
 
 const useStyles = createUseStyles({
   tableHeader: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  SampleDataCard:{
+    marginTop: '8px',
+    marginBottom: '8px',
   }
 })
 
@@ -59,11 +64,6 @@ const MultiRoutes = ({ mapStyle }) => {
     data: {}
   }))
   const [selectedRowKeys, setSelectedRowKeys] = React.useState([]);
-  const [requiredColumns, setRequiredColumns] = React.useState({
-    routeId: 'routeId',
-    longitude: 'longitude',
-    latitude: 'latitude',
-  })
 
   const markerEvents = {
     click: (e) => {
@@ -132,13 +132,6 @@ const MultiRoutes = ({ mapStyle }) => {
     setSelectedRowKeys(selectedRowKeys);
   }
 
-  const requiredColumnChange = key => e => {
-    setRequiredColumns({
-      ...requiredColumns,
-      [key]: e.target.value
-    })
-  }
-
   const option = {
     events: {
       created: amapCreateEvent,
@@ -205,138 +198,182 @@ const MultiRoutes = ({ mapStyle }) => {
         </GdMap>
       </GdContent>
       <GdPanel>
-        <Upload
-          accept='.csv'
-          fileList={file ? [file] : []}
-          beforeUpload={async file => {
-            const rawData = await new Promise((resolve, reject) => {
-              const fileReader = new FileReader();
-              fileReader.onload = ({target: {result}}) => {
-                resolve(result);
-              };
-              fileReader.readAsText(file);
-            });
-            const parsedData = csvParse(rawData);
-            const [...rows] = parsedData;
-            console.table(rows, parsedData.columns);
-            if (parsedData.columns &&
-              parsedData.columns.includes('routeId') &&
-              parsedData.columns.includes('longitude') &&
-              parsedData.columns.includes('latitude')
-            ) {
-              const routesMap = _.groupBy(rows, row => row.routeId);
-              let routesData = {};
-              let requestUrls = [];
-              const routeIds = Object.keys(routesMap);
-              const colors = getColorCategories(routeIds.length)
-              routeIds.forEach((key, index) => {
-                const pointers = routesMap[key].sort(seqSorter('seq')); // 按照 seq 对原数据进行排序
-                routesData[key] = { name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers };
-                const markers = pointers.map(pointer => `${pointer.longitude},${pointer.latitude}`)
-                requestUrls.push(...getGdDirectionUrl(Number(pointers[0].travelWay), markers).map(item => ({ key, ...item })))
-              });
+        <Collapse defaultActiveKey={['file', 'columns', 'routes']} >
+          <Collapse.Panel key="file" header="数据文件">
+            <SampleDataCard
+              className={classes.SampleDataCard}
+              url="/data/routes.csv"
+              title="示例数据"
+              description="routes.csv"
+            />
 
-              const requestPromises = requestUrls.map(requestUrl => {
-                // 调用高德路径规划api接口获取数据
-                return gdPathFetch(requestUrl.key, requestUrl.url, requestUrl.travelWay)
-              })
-              for (const requestPromise of requestPromises) {
-                const requestPromiseData = await requestPromise;
-                await routesData[requestPromiseData.key].path.push(requestPromiseData.data);
-                await routesData[requestPromiseData.key].distanceArray.push(requestPromiseData.distance);
-              }
-              setFile(file);
-              setRows(rows);
-              setColumns(parsedData.columns);
-              setData(routesData)
-            } else {
-              message.error('请确保csv中存在以下列：routeId、longitude、latitude')
-            }
-            return false;
-          }}
-          listType='picture'
-          onRemove={file => {
-            setFile(null);
-            setRows([]);
-            setColumns([]);
-            setData(null);
-          }}
-        >
-          <Button type="primary" size="small" icon={<UploadOutlined />}> 
-            上传文件
-          </Button>
-        </Upload>
+            <Upload
+              accept='.csv'
+              fileList={file ? [file] : []}
+              beforeUpload={async file => {
+                const rawData = await new Promise((resolve, reject) => {
+                  const fileReader = new FileReader();
+                  fileReader.onload = ({target: {result}}) => {
+                    resolve(result);
+                  };
+                  fileReader.readAsText(file);
+                });
+                const parsedData = csvParse(rawData);
+                const [...rows] = parsedData;
+                console.table(rows, parsedData.columns);
+                if (parsedData.columns &&
+                  parsedData.columns.includes('routeId') &&
+                  parsedData.columns.includes('longitude') &&
+                  parsedData.columns.includes('latitude')
+                ) {
+                  const routesMap = _.groupBy(rows, row => row.routeId);
+                  let routesData = {};
+                  let requestUrls = [];
+                  const routeIds = Object.keys(routesMap);
+                  const colors = getColorCategories(routeIds.length)
+                  routeIds.forEach((key, index) => {
+                    const pointers = routesMap[key].sort(seqSorter('seq')); // 按照 seq 对原数据进行排序
+                    routesData[key] = { name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers };
+                    const markers = pointers.map(pointer => `${pointer.longitude},${pointer.latitude}`)
+                    requestUrls.push(...getGdDirectionUrl(Number(pointers[0].travelWay), markers).map(item => ({ key, ...item })))
+                  });
 
-        {data &&
-          <Collapse defaultActiveKey={['routes']} >
-            <Collapse.Panel key="sampleData" header="模版文件">
+                  const requestPromises = requestUrls.map(requestUrl => {
+                    // 调用高德路径规划api接口获取数据
+                    return gdPathFetch(requestUrl.key, requestUrl.url, requestUrl.travelWay)
+                  })
+                  for (const requestPromise of requestPromises) {
+                    const requestPromiseData = await requestPromise;
+                    await routesData[requestPromiseData.key].path.push(requestPromiseData.data);
+                    await routesData[requestPromiseData.key].distanceArray.push(requestPromiseData.distance);
+                  }
+                  setFile(file);
+                  setRows(rows);
+                  setColumns(parsedData.columns);
+                  setData(routesData)
+                } else {
+                  message.error('请确保csv中存在以下列：routeId、longitude、latitude')
+                }
+                return false;
+              }}
+              listType='picture'
+              onRemove={file => {
+                setFile(null);
+                setRows([]);
+                setColumns([]);
+                setData(null);
+              }}
+            >
+              <Button type="primary" size="small" icon={<UploadOutlined />}> 
+                上传文件
+              </Button>
+            </Upload>
 
-            </Collapse.Panel>
-            <Collapse.Panel key="sampleData" header="必填字段说明">
-
-            </Collapse.Panel>
-            <Collapse.Panel key="routes" header="线路列表">
-              {data
-                ? (
-                  <Table
-                    size="small"
-                    title={currentPageData => (
-                      <div className={classes.tableHeader}>
-                        <div>
-                          {rows.length > 0 &&
-                            <Badge count={selectedRowKeys.length} showZero>
-                              <DownloadCsv
-                                data={rows}
-                                size="small"
-                                filename={'new-' + file.name}
-                                label='下载'
-                              />
-                            </Badge>
-                          }
-                        </div>
-                        <div>
-                          <Checkbox
-                            indeterminate={Object.values(data).filter(item => item.visible).length > Object.keys(data)}
-                            checked={_.every(Object.values(data), item => item.visible)}
-                            onChange={allVisibleTriggle(_.every(Object.values(data), item => item.visible))}
-                          >
-                            全显示
-                          </Checkbox>
-                        </div>
+          </Collapse.Panel>
+          <Collapse.Panel key="columns" header="必填字段说明">
+            <Form
+              labelCol={{ span: 10 }}
+              wrapperCol={{ span: 14 }}
+              name="columns"
+              initialValues={{
+                routeId: 'routeId',
+                longitude: 'longitude',
+                latitude: 'latitude',
+                seq: 'seq',
+              }}
+            >
+              <Form.Item
+                label="线路唯一标识"
+                name="routeId"
+                required
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                label="经度"
+                name="longitude"
+                required
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                label="纬度"
+                name="latitude"
+                required
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                label="站点顺序"
+                name="seq"
+              >
+                <Input disabled />
+              </Form.Item>
+            </Form>
+          </Collapse.Panel>
+          <Collapse.Panel key="routes" header="线路列表">
+            {data
+              ? (
+                <Table
+                  size="small"
+                  title={currentPageData => (
+                    <div className={classes.tableHeader}>
+                      <div>
+                        <Badge count={selectedRowKeys.length} showZero>
+                          <DownloadCsv
+                            data={rows.filter(item => selectedRowKeys.includes(item.routeId)).map(item => ({
+                              ...item,
+                              totalDistance: (data[item.routeId].distanceArray.reduce((a, c) => a + Number(c), 0))/1000
+                            }))}
+                            size="small"
+                            filename={'new-' + file.name}
+                            label='下载'
+                            disabled={selectedRowKeys.length === 0}
+                          />
+                        </Badge>
                       </div>
-                    )}
-                    summary={pageData => {
-                      return (
-                        <tr>
-                          <td colSpan={4}>
-                            已选择线路的总里程为：
-                            <Typography.Text type="danger">
-                              {selectedRowKeys.reduce(
-                                (a, c) => data[c].distanceArray.reduce((a, c) => a + Number(c), 0),
-                                0
-                              )/1000}
-                            </Typography.Text>
-                            千米
-                          </td>
-                        </tr>
-                      )
-                    }}
-                    pagination={false}
-                    rowSelection={{
-                      fixed: true,
-                      columnWidth: '26px',
-                      selectedRowKeys,
-                      onChange: onSelectChange,
-                    }}
-                    columns={tableColumns}
-                    dataSource={Object.keys(data).map(key => ({key, ...data[key]}))}
-                  />
-                )
-                : '请先参考模版文件上传数据'
-              }
-            </Collapse.Panel>
-          </Collapse>
-        }
+                      <div>
+                        <Checkbox
+                          indeterminate={Object.values(data).filter(item => item.visible).length > Object.keys(data)}
+                          checked={_.every(Object.values(data), item => item.visible)}
+                          onChange={allVisibleTriggle(_.every(Object.values(data), item => item.visible))}
+                        >
+                          全显示
+                        </Checkbox>
+                      </div>
+                    </div>
+                  )}
+                  summary={pageData => {
+                    return (
+                      <tr>
+                        <td colSpan={4}>
+                          已选择线路的总里程为：
+                          <Typography.Text type="danger">
+                            {selectedRowKeys.reduce(
+                              (a, c) => data[c].distanceArray.reduce((a, c) => a + Number(c), 0),
+                              0
+                            )/1000}
+                          </Typography.Text>
+                          千米
+                        </td>
+                      </tr>
+                    )
+                  }}
+                  pagination={false}
+                  rowSelection={{
+                    fixed: true,
+                    columnWidth: '26px',
+                    selectedRowKeys,
+                    onChange: onSelectChange,
+                  }}
+                  columns={tableColumns}
+                  dataSource={Object.keys(data).map(key => ({key, ...data[key]}))}
+                />
+              )
+              : '请先参考模版文件上传数据'
+            }
+          </Collapse.Panel>
+        </Collapse>
       </GdPanel>
     </GdLayout>
   );
