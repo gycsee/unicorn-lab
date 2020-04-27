@@ -17,12 +17,17 @@ const useStyles = createUseStyles({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
+  coverImg: {
+    width: '100%',
+    height: '300px',
+  }
 })
 
 const Card = ({
   title,
   description,
   image,
+  downloadUrl,
   path,
   ...cardProps
 }) => {
@@ -34,10 +39,11 @@ const Card = ({
         <img
           alt={title}
           src={image}
+          className={classes.coverImg}
         />
       }
       actions={[
-        <Button type="link" size="small" icon={<DownloadOutlined />}>
+        <Button type="link" size="small" href={downloadUrl} icon={<DownloadOutlined />}>
           模版数据下载
         </Button>,
         <Link to={path}>开始</Link>
