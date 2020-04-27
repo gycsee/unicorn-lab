@@ -206,9 +206,9 @@ const MultiRoutes = ({ mapStyle }) => {
           <Collapse.Panel key="file" header="数据文件">
             <SampleDataCard
               className={classes.SampleDataCard}
-              url="/data/routes.csv"
+              url="/data/multiRoutes.csv"
               title="示例数据"
-              description="routes.csv"
+              description="multiRoutes.csv"
             />
 
             <Upload
