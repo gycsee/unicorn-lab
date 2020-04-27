@@ -24,6 +24,7 @@
     "react": "^16.13.1",
     "react-amap": "^1.2.8",
     "react-app-rewired": "^2.1.5",
+    "react-color": "^2.18.0",
     "react-csv": "^2.0.3",
     "react-dom": "^16.13.1",
     "react-jss": "^10.1.1",
