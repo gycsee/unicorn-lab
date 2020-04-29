@@ -49,7 +49,7 @@ const MassMarker = ({ mapStyle }) => {
   const [file, setFile] = React.useState(null);
   const [rows, setRows] = React.useState([]);
   const [columns, setColumns] = React.useState([]);
-  const [groups, setGroups] = React.useState(null);
+  const [groups, setGroups] = React.useState(Map());
   const [info, setInfo] = React.useState(Map({
     visible:  false,
     position: {
@@ -60,21 +60,11 @@ const MassMarker = ({ mapStyle }) => {
   }))
 
   const onVisibleChange = key => (checked, event) => {
-    setGroups({
-      ...groups,
-      [key]: {
-        ...groups[key],
-        visible: checked,
-      }
-    })
+    setGroups(groups.mergeIn([key], { visible: checked }));
   }
 
   const allVisibleTriggle = checked => e => {
-    const newData = {...groups};
-    Object.keys(groups).forEach(element => {
-      newData[element].visible = !checked
-    });
-    setGroups(newData);
+    setGroups(groups.map(item => ({...item, visible: !checked})));
   }
 
   const option = {
@@ -102,8 +92,8 @@ const MassMarker = ({ mapStyle }) => {
     }
   ]
 
-  const visibleGroupLength = groups
-    ? Object.values(groups).filter(item => item.visible).length
+  const visibleGroupLength = groups.size
+    ? groups.filter(item => item.visible).size
     : 0;
 
   return (
@@ -113,8 +103,8 @@ const MassMarker = ({ mapStyle }) => {
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
           <GdSimpleMarker />
           <GdPointSimplifier
-            data={groups
-              ? rows.filter(item => groups[item.license].visible)
+            data={groups.size
+              ? rows.filter(item => groups.getIn([item.license, 'visible']))
               : rows
             }
           />
@@ -152,16 +142,14 @@ const MassMarker = ({ mapStyle }) => {
                   setFile(file);
                   setRows(rows);
                   setColumns(parsedDataColumns);
-                  let groupsMap = {};
+                  let groupsMap = Map();
                   if (parsedDataColumns.includes('license')) {
                     _.unionBy(rows, 'license').forEach(element => {
-                      groupsMap[element.license] = {
+                      groupsMap = groupsMap.set(element.license, {
                         license: element.license,
                         visible: true,
-                      }
+                      })
                     });
-                  } else {
-                    groupsMap = null;
                   }
                   setGroups(groupsMap)
                 } else {
@@ -174,7 +162,7 @@ const MassMarker = ({ mapStyle }) => {
                 setFile(null);
                 setRows([]);
                 setColumns([]);
-                setGroups(null)
+                setGroups(Map())
               }}
             >
               <Button type="primary" size="small" icon={<UploadOutlined />}> 
@@ -217,7 +205,7 @@ const MassMarker = ({ mapStyle }) => {
             </Form>
           </Collapse.Panel>
           <Collapse.Panel key="groups" header="海量点分组">
-            {groups
+            {groups.size
               ? (
                 <Table
                   size="small"
@@ -225,9 +213,9 @@ const MassMarker = ({ mapStyle }) => {
                     <div className={classes.tableHeader}>
                       <div>
                         <Checkbox
-                          indeterminate={!!visibleGroupLength && visibleGroupLength < Object.keys(groups).length}
-                          checked={visibleGroupLength === Object.keys(groups).length}
-                          onChange={allVisibleTriggle(visibleGroupLength === Object.keys(groups).length)}
+                          indeterminate={!!visibleGroupLength && visibleGroupLength < groups.size}
+                          checked={visibleGroupLength === groups.size}
+                          onChange={allVisibleTriggle(visibleGroupLength === groups.size)}
                         >
                           全显示
                         </Checkbox>
@@ -237,7 +225,7 @@ const MassMarker = ({ mapStyle }) => {
                   pagination={false}
                   columns={tableColumns}
                   scroll={{ y: 400 }}
-                  dataSource={Object.keys(groups).map(key => ({key, ...groups[key]}))}
+                  dataSource={groups.toArray().map(item => ({key: item[0], ...item[1]}))}
                 />
               )
               : '请先参考模版文件上传数据'

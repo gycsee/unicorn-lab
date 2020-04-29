@@ -54,7 +54,7 @@ const MultiRoutes = ({ mapStyle }) => {
   const [file, setFile] = React.useState(null);
   const [rows, setRows] = React.useState([]);
   const [columns, setColumns] = React.useState([]);
-  const [data, setData] = React.useState(null);
+  const [data, setData] = React.useState(Map());
   const [info, setInfo] = React.useState(Map({
     visible:  false,
     position: {
@@ -101,31 +101,15 @@ const MultiRoutes = ({ mapStyle }) => {
   }
 
   const onColorChange = key => (color) => {
-    setData({
-      ...data,
-      [key]: {
-        ...data[key],
-        color: color,
-      }
-    })
+    setData(data.mergeIn([key], { color: color }));
   }
 
   const onVisibleChange = key => (checked, event) => {
-    setData({
-      ...data,
-      [key]: {
-        ...data[key],
-        visible: checked,
-      }
-    })
+    setData(data.mergeIn([key], { visible: checked }));
   }
 
   const allVisibleTriggle = checked => e => {
-    const newData = Object.keys(data).map(key => ({
-      ...data[key],
-      visible: !checked
-    }))
-    setData(newData);
+    setData(data.map(item => ({...item, visible: !checked})));
   }
 
   const onSelectChange = selectedRowKeys => {
@@ -159,7 +143,10 @@ const MultiRoutes = ({ mapStyle }) => {
       dataIndex: 'distanceArray',
       align: 'right',
       width: '94px',
-      render: (text, record) => `${(text.reduce((a, c) => a + Number(c), 0))/1000}`
+      render: (text, record) => {
+
+        return `${(text.reduce((a, c) => a + Number(c), 0))/1000}`
+      }
     }, {
       title: '显示',
       dataIndex: 'visible',
@@ -174,19 +161,19 @@ const MultiRoutes = ({ mapStyle }) => {
     }
   ]
 
-  const visibleLength = data
-    ? Object.values(data).filter(item => item.visible).length
+  const visibleLength = data.size
+    ? data.filter(item => item.visible).size
     : 0;
   return (
     <GdLayout>
       <GdContent>
         <GdMap {...option} >
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
-          {data && Object.keys(data).map((routeId, index) => {
-            const { markers, path, distanceArray, name, color, visible } = data[routeId];
+          {data.size && data.toArray().map((item, index) => {
+            const { markers, path, distanceArray, name, color, visible } = item[1];
             return (
               <GdRoute
-                key={index}
+                key={name}
                 name={name}
                 visible={visible}
                 color={color}
@@ -231,13 +218,13 @@ const MultiRoutes = ({ mapStyle }) => {
                   parsedData.columns.includes('latitude')
                 ) {
                   const routesMap = _.groupBy(rows, row => row.routeId);
-                  let routesData = {};
+                  let routesData = Map();
                   let requestUrls = [];
                   const routeIds = Object.keys(routesMap);
                   const colors = getColorCategories(routeIds.length)
                   routeIds.forEach((key, index) => {
                     const pointers = routesMap[key].sort(seqSorter('seq')); // 按照 seq 对原数据进行排序
-                    routesData[key] = { name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers };
+                    routesData = routesData.set(key, { name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers });
                     const markers = pointers.map(pointer => `${pointer.longitude},${pointer.latitude}`)
                     requestUrls.push(...getGdDirectionUrl(Number(pointers[0].travelWay), markers).map(item => ({ key, ...item })))
                   });
@@ -248,26 +235,30 @@ const MultiRoutes = ({ mapStyle }) => {
                   })
                   for (const requestPromise of requestPromises) {
                     const requestPromiseData = await requestPromise;
-                    await routesData[requestPromiseData.key].path.push(requestPromiseData.data);
-                    await routesData[requestPromiseData.key].distanceArray.push(requestPromiseData.distance);
+                    routesData = routesData.updateIn([requestPromiseData.key], item => ({
+                      ...item,
+                      path: [...item.path, requestPromiseData.data],
+                      distanceArray: [...item.distanceArray, requestPromiseData.distance],
+                    }));
                   }
                   setFile(file);
                   setRows(rows);
                   setColumns(parsedData.columns);
-                  setData(routesData);
                   setSelectedRowKeys([]);
+                  setData(routesData);
                 } else {
                   message.error('请确保csv中存在以下列：routeId、longitude、latitude')
                 }
                 return false;
               }}
+              customRequest={() => {}}
               listType='picture'
               onRemove={file => {
                 setFile(null);
                 setRows([]);
                 setColumns([]);
-                setData(null);
                 setSelectedRowKeys([]);
+                setData(null);
               }}
             >
               <Button type="primary" size="small" icon={<UploadOutlined />}> 
@@ -318,7 +309,7 @@ const MultiRoutes = ({ mapStyle }) => {
             </Form>
           </Collapse.Panel>
           <Collapse.Panel key="routes" header="线路列表">
-            {data
+            {data.size
               ? (
                 <Table
                   size="small"
@@ -329,7 +320,7 @@ const MultiRoutes = ({ mapStyle }) => {
                           <DownloadCsv
                             data={rows.filter(item => selectedRowKeys.includes(item.routeId)).map(item => ({
                               ...item,
-                              totalDistance: (data[item.routeId].distanceArray.reduce((a, c) => a + Number(c), 0))/1000
+                              totalDistance: (data.getIn([item.routeId, 'distanceArray']).reduce((a, c) => a + Number(c), 0))/1000
                             }))}
                             size="small"
                             filename={'new-' + file.name}
@@ -340,9 +331,9 @@ const MultiRoutes = ({ mapStyle }) => {
                       </div>
                       <div>
                         <Checkbox
-                          indeterminate={!!visibleLength && visibleLength < Object.keys(data).length}
-                          checked={visibleLength === Object.keys(data).length}
-                          onChange={allVisibleTriggle(visibleLength === Object.keys(data).length)}
+                          indeterminate={!!visibleLength && visibleLength < data.size}
+                          checked={visibleLength === data.size}
+                          onChange={allVisibleTriggle(visibleLength === data.size)}
                         >
                           全显示
                         </Checkbox>
@@ -356,7 +347,7 @@ const MultiRoutes = ({ mapStyle }) => {
                           已选择线路的总里程为：
                           <Typography.Text type="danger">
                             {selectedRowKeys.reduce(
-                              (a, c) => data[c].distanceArray.reduce((a, c) => a + Number(c), 0),
+                              (a, c) => data.getIn([c, 'distanceArray']).reduce((aInner, cInner) => aInner + Number(cInner), 0) + a,
                               0
                             )/1000}
                           </Typography.Text>
@@ -373,7 +364,7 @@ const MultiRoutes = ({ mapStyle }) => {
                     onChange: onSelectChange,
                   }}
                   columns={tableColumns}
-                  dataSource={Object.keys(data).map(key => ({key, ...data[key]}))}
+                  dataSource={data.toArray().map(item => ({key: item[0], ...item[1]}))}
                 />
               )
               : '请先参考模版文件上传数据'
