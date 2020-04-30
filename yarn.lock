@@ -9300,8 +9300,8 @@ react-amap@^1.2.8:
 
 react-app-polyfill@^1.0.6:
   version "1.0.6"
-  resolved "https://registry.yarnpkg.com/react-app-polyfill/-/react-app-polyfill-1.0.6.tgz#890f8d7f2842ce6073f030b117de9130a5f385f0"
-  integrity sha512-OfBnObtnGgLGfweORmdZbyEz+3dgVePQBb3zipiaDsMHV1NpWm0rDFYIVXFV/AK+x4VIIfWHhrdMIeoTLyRr2g==
+  resolved "https://registry.npm.taobao.org/react-app-polyfill/download/react-app-polyfill-1.0.6.tgz#890f8d7f2842ce6073f030b117de9130a5f385f0"
+  integrity sha1-iQ+NfyhCzmBz8DCxF96RMKXzhfA=
   dependencies:
     core-js "^3.5.0"
     object-assign "^4.1.1"
