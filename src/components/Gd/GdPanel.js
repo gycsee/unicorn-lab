@@ -33,7 +33,7 @@ const useStyles = createUseStyles({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    overflowY: 'scroll',
+    overflowY: 'auto',
     borderRadius: '1px',
     overflow: 'hidden',
     width: props => props.width,
