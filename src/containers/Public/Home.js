@@ -5,19 +5,21 @@ import Card from 'components/Card';
 import massMarkerPng from 'assets/images/massMarker.png';
 import multiRoutesPng from 'assets/images/multiRoutes.png';
 
+const PUBLIC_URL = process.env.PUBLIC_URL;
+
 const cards = [
   {
     title: '海量点',
     description: '海量点展示，并根据license(例如车牌号)进行点分类',
     image: massMarkerPng,
     path: '/gd/mass-marker',
-    downloadUrl: '/data/pointSimplifier.csv',
+    downloadUrl: PUBLIC_URL + '/data/pointSimplifier.csv',
   }, {
     title: '多线路展示',
     description: '路径规划',
     image: multiRoutesPng,
     path: '/gd/multi-routes',
-    downloadUrl: '/data/routes.csv',
+    downloadUrl: PUBLIC_URL + '/data/routes.csv',
   },
 ]
 
@@ -26,7 +28,7 @@ const Home = () => {
     <div>
       <Row gutter={[16, 8]}>
         {cards.map((item, index) => (
-          <Col key={index} xs={24} sm={24} md={12} lg={8} xxl={6}>
+          <Col key={index} xs={24} sm={12} md={8} lg={6} xxl={4}>
             <Card
               bordered={false}
               {...item}

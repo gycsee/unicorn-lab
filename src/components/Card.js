@@ -17,9 +17,14 @@ const useStyles = createUseStyles({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-  coverImg: {
+  imageBox: {
+    overflow: 'hidden',
     width: '100%',
-    height: '300px',
+    height: '180px',
+    backgroundImage: props => `url(${props.image})`,
+    backgroundRepeat: 'no-repeat',
+    backgroundColor: '#666',
+    backgroundSize: 'cover',
   }
 })
 
@@ -31,17 +36,11 @@ const Card = ({
   path,
   ...cardProps
 }) => {
-  const classes = useStyles();
+  const classes = useStyles({ image });
   return (
     <AntCard
       className={classes.root}
-      cover={
-        <img
-          alt={title}
-          src={image}
-          className={classes.coverImg}
-        />
-      }
+      cover={<div className={classes.imageBox} />}
       actions={[
         <Button type="link" size="small" href={downloadUrl} icon={<DownloadOutlined />}>
           模版数据下载
