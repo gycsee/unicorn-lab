@@ -101,7 +101,6 @@ const MassMarker = ({ mapStyle }) => {
       <GdContent>
         <GdMap {...option} >
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
-          <GdSimpleMarker />
           <GdPointSimplifier
             data={groups.size
               ? rows.filter(item => groups.getIn([item.license, 'visible']))
