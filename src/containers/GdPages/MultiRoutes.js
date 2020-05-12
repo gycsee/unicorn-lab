@@ -258,7 +258,7 @@ const MultiRoutes = ({ mapStyle }) => {
                 setRows([]);
                 setColumns([]);
                 setSelectedRowKeys([]);
-                setData(null);
+                setData(Map());
               }}
             >
               <Button type="primary" size="small" icon={<UploadOutlined />}> 
