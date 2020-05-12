@@ -143,10 +143,11 @@ const MassMarker = ({ mapStyle }) => {
                   setColumns(parsedDataColumns);
                   let groupsMap = Map();
                   if (parsedDataColumns.includes('license')) {
-                    _.unionBy(rows, 'license').forEach(element => {
+                    _.unionBy(rows, 'license').forEach((element, index) => {
                       groupsMap = groupsMap.set(element.license, {
                         license: element.license,
                         visible: true,
+                        index,
                       })
                     });
                   }
@@ -224,7 +225,7 @@ const MassMarker = ({ mapStyle }) => {
                   pagination={false}
                   columns={tableColumns}
                   scroll={{ y: 400 }}
-                  dataSource={groups.toArray().map(item => ({key: item[0], ...item[1]}))}
+                  dataSource={groups.toArray().map(item => ({key: item[0], ...item[1]})).sort((a, b) => (a.index - b.index))}
                 />
               )
               : '请先参考模版文件上传数据'

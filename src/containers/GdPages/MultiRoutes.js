@@ -221,10 +221,10 @@ const MultiRoutes = ({ mapStyle }) => {
                   let routesData = Map();
                   let requestUrls = [];
                   const routeIds = Object.keys(routesMap);
-                  const colors = getColorCategories(routeIds.length)
+                  const colors = getColorCategories(routeIds.length);
                   routeIds.forEach((key, index) => {
                     const pointers = routesMap[key].sort(seqSorter('seq')); // 按照 seq 对原数据进行排序
-                    routesData = routesData.set(key, { name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers });
+                    routesData = routesData.set(key, { index, name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers });
                     const markers = pointers.map(pointer => `${pointer.longitude},${pointer.latitude}`)
                     requestUrls.push(...getGdDirectionUrl(Number(pointers[0].travelWay), markers).map(item => ({ key, ...item })))
                   });
@@ -364,7 +364,7 @@ const MultiRoutes = ({ mapStyle }) => {
                     onChange: onSelectChange,
                   }}
                   columns={tableColumns}
-                  dataSource={data.toArray().map(item => ({key: item[0], ...item[1]}))}
+                  dataSource={data.toArray().map(item => ({key: item[0], ...item[1]})).sort((a, b) => (a.index - b.index))}
                 />
               )
               : '请先参考模版文件上传数据'
