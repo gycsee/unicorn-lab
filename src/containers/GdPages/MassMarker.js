@@ -1,8 +1,6 @@
 import React from 'react';
 import { Map } from 'immutable';
-import { Upload, Button, message, Collapse, Switch, Checkbox, Table, Form, Input } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-import { csvParse } from 'd3-dsv';
+import { message, Collapse, Switch, Checkbox, Table, Form, Input } from 'antd';
 import _ from 'lodash';
 import { createUseStyles } from 'react-jss';
 
@@ -46,8 +44,6 @@ const MassMarker = ({ mapStyle }) => {
     }
   }, [])
 
-  const [file, setFile] = React.useState(null);
-  const [originData, setOriginData] = React.useState([]);
   const [columns, setColumns] = React.useState([]);
   const [groups, setGroups] = React.useState(Map());
   const [info, setInfo] = React.useState(Map({
@@ -69,8 +65,6 @@ const MassMarker = ({ mapStyle }) => {
 
   const handleFileChange = async (parsedData, f) => {
     if (parsedData.length === 0) {
-      setFile(null);
-      setOriginData([]);
       setColumns([]);
       setGroups(Map())
       return null;
@@ -113,8 +107,6 @@ const MassMarker = ({ mapStyle }) => {
       })
     }
     setGroups(groupsMap);
-    setFile(f);
-    setOriginData(rows);
     setColumns(parsedDataColumns);
     
   }
