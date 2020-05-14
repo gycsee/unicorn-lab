@@ -14,7 +14,7 @@ const useStyles = createUseStyles({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '16px',
+    padding: '16px 8px',
     border: '1px dashed #177ddc',
     borderRadius: '2px',
     color: '#177ddc',

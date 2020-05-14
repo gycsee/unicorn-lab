@@ -38,6 +38,7 @@ const CsvExcelDropzone = ({
       onChange={handleFileChange}
       accept={[".text", ".csv", ".xlsx"]}
       fileIcon={<FileTextOutlined />}
+      tooltip='将CSV或Excel文件拖到此处，或单击直接上传'
     />
   );
 }
