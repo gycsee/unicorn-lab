@@ -18,6 +18,7 @@ import SampleDataCard from 'components/SampleDataViewer/SampleDataCard';
 import {
   GdPointSimplifier,
 } from 'components/Gd/GdUiComponents';
+import CsvExcelDropzone from 'components/FileDropzone/CsvExcelDropzone';
 
 const useStyles = createUseStyles({
   tableHeader: {
@@ -46,7 +47,7 @@ const MassMarker = ({ mapStyle }) => {
   }, [])
 
   const [file, setFile] = React.useState(null);
-  const [rows, setRows] = React.useState([]);
+  const [originData, setOriginData] = React.useState([]);
   const [columns, setColumns] = React.useState([]);
   const [groups, setGroups] = React.useState(Map());
   const [info, setInfo] = React.useState(Map({
@@ -64,6 +65,58 @@ const MassMarker = ({ mapStyle }) => {
 
   const allVisibleTriggle = checked => e => {
     setGroups(groups.map(item => ({...item, visible: !checked})));
+  }
+
+  const handleFileChange = async (parsedData, f) => {
+    if (parsedData.length === 0) {
+      setFile(null);
+      setOriginData([]);
+      setColumns([]);
+      setGroups(Map())
+      return null;
+    }
+    const [parsedDataColumns, ...rows] = parsedData;
+    console.table(parsedData);
+    const longitudeIndex = parsedDataColumns.findIndex(item => item === 'longitude');
+    const latitudeIndex = parsedDataColumns.findIndex(item => item === 'latitude');
+    const licenseIndex = parsedDataColumns.findIndex(item => item === 'license');
+    if (longitudeIndex === -1 || latitudeIndex === -1) {
+      message.error('请确保csv中存在以下列：longitude、latitude');
+      return null;
+    }
+    
+    let groupsMap = Map();
+    if (licenseIndex !== -1) {
+      const groups = _.groupBy(rows, row => row[licenseIndex]);
+      Object.keys(groups).forEach((element, index) => {
+        groupsMap = groupsMap.set(element, {
+          index,
+          license: element,
+          visible: true,
+          data: groups[element].map(item => ({
+            longitude: item[longitudeIndex],
+            latitude: item[latitudeIndex],
+            license: item[licenseIndex],
+          }))
+        })
+      });
+    } else {
+      groupsMap.set('_one', {
+        index: 0,
+        license: '',
+        visible: true,
+        data: rows.map(item => ({
+          longitude: item[longitudeIndex],
+          latitude: item[latitudeIndex],
+          license: item[licenseIndex],
+        }))
+      })
+    }
+    setGroups(groupsMap);
+    setFile(f);
+    setOriginData(rows);
+    setColumns(parsedDataColumns);
+    
   }
 
   const option = {
@@ -100,12 +153,12 @@ const MassMarker = ({ mapStyle }) => {
       <GdContent>
         <GdMap {...option} >
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
-          <GdPointSimplifier
+          {<GdPointSimplifier
             data={groups.size
-              ? rows.filter(item => groups.getIn([item.license, 'visible']))
-              : rows
+              ? _.concat(...groups.filter(item => item.visible).toArray().map(item => item[1].data))
+              : []
             }
-          />
+          />}
           <GdSetting defaultMapStyle={'whitesmoke'} />
         </GdMap>
       </GdContent>
@@ -114,60 +167,12 @@ const MassMarker = ({ mapStyle }) => {
           <Collapse.Panel key="file" header="数据文件">
             <SampleDataCard
               className={classes.SampleDataCard}
-              url="/data/pointSimplifier.csv"
-              title="示例数据"
-              description="pointSimplifier.csv"
+              csvUrl="/data/pointSimplifier.csv"
+              excelUrl="/data/pointSimplifier.xlsx"
+              title="海量点示例数据"
             />
 
-            <Upload
-              accept='.csv'
-              fileList={file ? [file] : []}
-              beforeUpload={async file => {
-                const rawData = await new Promise((resolve, reject) => {
-                  const fileReader = new FileReader();
-                  fileReader.onload = ({target: {result}}) => {
-                    resolve(result);
-                  };
-                  fileReader.readAsText(file);
-                });
-                const parsedData = csvParse(rawData);
-                const [...rows] = parsedData;
-                const parsedDataColumns = parsedData.columns;
-                if (parsedDataColumns &&
-                  parsedDataColumns.includes('longitude') &&
-                  parsedDataColumns.includes('latitude')
-                ) {
-                  setFile(file);
-                  setRows(rows);
-                  setColumns(parsedDataColumns);
-                  let groupsMap = Map();
-                  if (parsedDataColumns.includes('license')) {
-                    _.unionBy(rows, 'license').forEach((element, index) => {
-                      groupsMap = groupsMap.set(element.license, {
-                        license: element.license,
-                        visible: true,
-                        index,
-                      })
-                    });
-                  }
-                  setGroups(groupsMap)
-                } else {
-                  message.error('请确保csv中存在以下列：longitude、latitude')
-                }
-                return false;
-              }}
-              listType='picture'
-              onRemove={file => {
-                setFile(null);
-                setRows([]);
-                setColumns([]);
-                setGroups(Map())
-              }}
-            >
-              <Button type="primary" size="small" icon={<UploadOutlined />}> 
-                上传文件
-              </Button>
-            </Upload>
+            <CsvExcelDropzone onChange={handleFileChange} />
 
           </Collapse.Panel>
           <Collapse.Panel key="columns" header="必填字段说明">
@@ -204,7 +209,7 @@ const MassMarker = ({ mapStyle }) => {
             </Form>
           </Collapse.Panel>
           <Collapse.Panel key="groups" header="海量点分组">
-            {groups.size
+            {groups.size > 1
               ? (
                 <Table
                   size="small"

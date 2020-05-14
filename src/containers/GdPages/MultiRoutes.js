@@ -317,9 +317,9 @@ const MultiRoutes = ({ mapStyle }) => {
           <Collapse.Panel key="file" header="数据文件">
             <SampleDataCard
               className={classes.SampleDataCard}
-              url="/data/multiRoutes.csv"
-              title="示例数据"
-              description="multiRoutes.csv"
+              csvUrl="/data/multiRoutes.csv"
+              excelUrl="/data/multiRoutes.xlsx"
+              title="线路示例数据"
             />
 
             <CsvExcelDropzone onChange={handleFileChange} />
