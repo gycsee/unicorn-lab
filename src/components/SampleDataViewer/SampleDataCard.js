@@ -13,8 +13,10 @@ const SampleDataCard = ({
     <Card
       style={{ width: '100%' }}
       actions={[
-        <Button key='download' type="link" href={url} icon={<DownloadOutlined />}>下载</Button>,
+        <Button key='csv' type="link" href={url} icon={<DownloadOutlined />}>CSV</Button>,
+        <Button key='excel' type="link" href={url} icon={<DownloadOutlined />}>Excel</Button>,
         <SampleCsvModal
+          key='view'
           label={'查看'}
           url={url}
           ButtonProps={{

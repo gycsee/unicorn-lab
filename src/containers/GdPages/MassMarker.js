@@ -16,7 +16,6 @@ import {
 } from 'components/Gd';
 import SampleDataCard from 'components/SampleDataViewer/SampleDataCard';
 import {
-  GdSimpleMarker,
   GdPointSimplifier,
 } from 'components/Gd/GdUiComponents';
 

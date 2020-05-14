@@ -14,13 +14,19 @@ const useStyles = createUseStyles({
 })
 
 const DownloadCsv = ({
-  data,
+  onClick,
   filename,
   className,
   label = '下载',
   ...restProps
 }) => {
   const classes = useStyles();
+  const [data, setData] = React.useState([]);
+
+  const handleDownload = (event, done) => {
+    setData(onClick())
+    done();
+  }
   return (
     <Button
       type="primary"
@@ -31,6 +37,8 @@ const DownloadCsv = ({
       <CSVLink
         data={data}
         filename={filename}
+        asyncOnClick={true}
+        onClick={handleDownload}
         target="_blank"
       >
         {label}
