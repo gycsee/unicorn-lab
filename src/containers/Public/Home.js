@@ -19,7 +19,7 @@ const cards = [
     description: '路径规划',
     image: multiRoutesPng,
     path: '/gd/multi-routes',
-    downloadUrl: PUBLIC_URL + '/data/routes.csv',
+    downloadUrl: PUBLIC_URL + '/data/multiRoutes.csv',
   },
 ]
 
