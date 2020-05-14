@@ -121,6 +121,7 @@ const MultiRoutes = ({ mapStyle }) => {
 
   const getDownloadCsvData = () => {
     const routeIdIndex = data.get('columns').findIndex(item => item === 'routeId');
+    const appearedIds = [];
     return csvOrginData.filter((item, index) => {
       if (index === 0) {
         return true;
@@ -132,7 +133,12 @@ const MultiRoutes = ({ mapStyle }) => {
         if (index === 0) {
           return [...item, 'totalDistance'];
         } else {
-          return [...item, (data.getIn(['routes', item[routeIdIndex], 'distanceArray']).reduce((a, c) => a + Number(c), 0)) / 1000];
+          if (appearedIds.includes(item[routeIdIndex])) {
+            return [...item, ''];
+          } else {
+            appearedIds.push(item[routeIdIndex]);
+            return [...item, (data.getIn(['routes', item[routeIdIndex], 'distanceArray']).reduce((a, c) => a + Number(c), 0)) / 1000];
+          }
         }
       })
   }
@@ -248,7 +254,6 @@ const MultiRoutes = ({ mapStyle }) => {
       align: 'right',
       width: '94px',
       render: (text, record) => {
-
         return `${(text.reduce((a, c) => a + Number(c), 0))/1000}`
       }
     }, {
