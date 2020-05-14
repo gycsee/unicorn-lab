@@ -25,6 +25,7 @@ import {
 } from 'components/Gd/util';
 import SampleDataCard from 'components/SampleDataViewer/SampleDataCard';
 import CsvExcelDropzone from 'components/FileDropzone/CsvExcelDropzone';
+import { getByteLen } from 'common/util';
 
 const useStyles = createUseStyles({
   tableHeader: {
@@ -152,16 +153,31 @@ const MultiRoutes = ({ mapStyle }) => {
       };
       fileReader.readAsArrayBuffer(file);
     });
-    let ws = XLSX.utils.aoa_to_sheet([
+    const aoa = [
       [ "routeId", "总距离（千米）" ],
       ...data.get('routes').toArray().map(item => ([item[0], item[1].distanceArray.reduce((a, c) => a + Number(c), 0) / 1000]))
-    ]);
-
-    ws['!cols'] = [
-      { wch: 20 },
-      { wch: 12 },
     ];
-    await XLSX.utils.book_append_sheet(wb, ws, '路线数据');
+    let ws = XLSX.utils.aoa_to_sheet(aoa);
+    let objectMaxLength = [];
+    for (let i = 0; i < aoa.length; i++) {
+      let value = aoa[i];
+      for (let j = 0; j < value.length; j++) {
+        const temp = objectMaxLength[j];
+        if (typeof value[j] == "number") {
+          objectMaxLength[j] = temp > 10 ? temp : 10;
+        } else {
+          const len = getByteLen(value[j]);
+          objectMaxLength[j] = temp >= len ? temp : len;
+        }
+      }
+    }
+    const wscols = objectMaxLength.map(w => { return { wch: w } });
+    ws['!cols'] = wscols;
+    let sheetName = '路线数据', i = 2;
+    while (wb.SheetNames.includes(sheetName)) {
+      sheetName = `${sheetName}${i++}`
+    }
+    await XLSX.utils.book_append_sheet(wb, ws, sheetName);
     return wb;
   }
 
@@ -183,47 +199,45 @@ const MultiRoutes = ({ mapStyle }) => {
     const latitudeIndex = columns.findIndex(item => item === 'latitude');
     const seqIndex = columns.findIndex(item => item === 'seq');
     const travelWayIndex = columns.findIndex(item => item === 'travelWay');
-    if (routeIdIndex !== -1 &&
-      longitudeIndex !== -1 &&
-      latitudeIndex !== -1
-    ) {
-      const routesMap = _.groupBy(rows, row => row[routeIdIndex]);
-      let routesData = Map();
-      let requestUrls = [];
-      const routeIds = Object.keys(routesMap);
-      const colors = getColorCategories(routeIds.length);
-      routeIds.forEach((key, index) => {
-        const pointers = seqIndex === -1
-          ? routesMap[key]
-          : routesMap[key].sort(seqSorter(seqIndex)); // 按照 seq 对原数据进行排序
-        const travelWay = travelWayIndex === -1 ? 0 : Number(pointers[0][travelWayIndex]);
-        routesData = routesData.set(key, { index, name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers });
-        const markers = pointers.map(pointer => `${pointer[longitudeIndex]},${pointer[latitudeIndex]}`)
-        requestUrls.push(...getGdDirectionUrl(travelWay, markers).map(item => ({ key, ...item })))
-      });
-
-      const requestPromises = requestUrls.map(requestUrl => {
-        // 调用高德路径规划api接口获取数据
-        return gdPathFetch(requestUrl.key, requestUrl.url, requestUrl.travelWay)
-      })
-      for (const requestPromise of requestPromises) {
-        const requestPromiseData = await requestPromise;
-        routesData = routesData.updateIn([requestPromiseData.key], item => ({
-          ...item,
-          path: [...item.path, requestPromiseData.data],
-          distanceArray: [...item.distanceArray, requestPromiseData.distance],
-        }));
-      }
-      setFile(f);
-      setSelectedRowKeys([]);
-      setData(Map({
-        columns,
-        routes: routesData
-      }));
-      setCsvOriginData(parsedData)
-    } else {
-      message.error('请确保csv中存在以下列：routeId、longitude、latitude')
+    if (routeIdIndex === -1 || longitudeIndex === -1 || latitudeIndex === -1) {
+      message.error('请确保csv中存在以下列：routeId、longitude、latitude');
+      return null;
     }
+    
+    const routesMap = _.groupBy(rows, row => row[routeIdIndex]);
+    let routesData = Map();
+    let requestUrls = [];
+    const routeIds = Object.keys(routesMap);
+    const colors = getColorCategories(routeIds.length);
+    routeIds.forEach((key, index) => {
+      const pointers = seqIndex === -1
+        ? routesMap[key]
+        : routesMap[key].sort(seqSorter(seqIndex)); // 按照 seq 对原数据进行排序
+      const travelWay = travelWayIndex === -1 ? 0 : Number(pointers[0][travelWayIndex]);
+      routesData = routesData.set(key, { index, name: key, visible: true, color: colors[index], path: [], distanceArray: [], markers: pointers });
+      const markers = pointers.map(pointer => `${pointer[longitudeIndex]},${pointer[latitudeIndex]}`)
+      requestUrls.push(...getGdDirectionUrl(travelWay, markers).map(item => ({ key, ...item })))
+    });
+
+    const requestPromises = requestUrls.map(requestUrl => {
+      // 调用高德路径规划api接口获取数据
+      return gdPathFetch(requestUrl.key, requestUrl.url, requestUrl.travelWay)
+    })
+    for (const requestPromise of requestPromises) {
+      const requestPromiseData = await requestPromise;
+      routesData = routesData.updateIn([requestPromiseData.key], item => ({
+        ...item,
+        path: [...item.path, requestPromiseData.data],
+        distanceArray: [...item.distanceArray, requestPromiseData.distance],
+      }));
+    }
+    setFile(f);
+    setSelectedRowKeys([]);
+    setData(Map({
+      columns,
+      routes: routesData
+    }));
+    setCsvOriginData(parsedData)
   }
 
   const option = {

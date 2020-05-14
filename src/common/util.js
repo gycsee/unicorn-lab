@@ -42,3 +42,20 @@ export const getColorCategories = (num = 0) => {
 	}
 	return colors;
 }
+
+/**
+ * 计算字符串字节长度，Unicode 不在 0-128 范围内的 x2
+ * @param {String} str 
+ */
+export const getByteLen = (str) => {
+	var len = 0;
+    for (var i = 0; i < str.length; i++) {
+        var length = str.charCodeAt(i);
+        if (length >= 0 && length <= 128) {
+            len += 1;
+        } else {
+            len += 2;
+        }
+    }
+    return len;
+}
