@@ -3,7 +3,6 @@ import { Modal, Button } from 'antd';
 import * as d3 from 'd3-fetch';
 import { AutoSizer } from 'react-virtualized';
 
-import DynamicWidthGrid from 'components/Table/DynamicWidthGrid';
 import DynamicWidthMultiGrid from 'components/Table/DynamicWidthMultiGrid';
 
 const SampleCsv = ({

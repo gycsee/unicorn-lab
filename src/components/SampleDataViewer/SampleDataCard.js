@@ -4,19 +4,21 @@ import { DownloadOutlined, FolderViewOutlined, LinkOutlined } from '@ant-design/
 import SampleCsvModal from './SampleCsvModal'
 
 const SampleDataCard = ({
-  url,
+  csvUrl,
+  excelUrl,
   title = '示例数据',
-  description = 'data.csv',
   ...restProps
 }) => {
   return (
     <Card
       style={{ width: '100%' }}
       actions={[
-        <Button key='download' type="link" href={url} icon={<DownloadOutlined />}>下载</Button>,
+        <Button key='csv' type="link" href={csvUrl} icon={<DownloadOutlined />}>CSV</Button>,
+        <Button key='excel' type="link" href={excelUrl} icon={<DownloadOutlined />}>Excel</Button>,
         <SampleCsvModal
+          key='view'
           label={'查看'}
-          url={url}
+          url={csvUrl}
           ButtonProps={{
             icon: <FolderViewOutlined />,
             type: 'link',
@@ -28,7 +30,6 @@ const SampleDataCard = ({
       <Card.Meta
         avatar={<Avatar icon={<LinkOutlined />} />}
         title={title}
-        description={description}
       />
     </Card>
   );

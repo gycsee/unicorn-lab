@@ -13,13 +13,15 @@ const cards = [
     description: '海量点展示，并根据license(例如车牌号)进行点分类',
     image: massMarkerPng,
     path: '/gd/mass-marker',
-    downloadUrl: PUBLIC_URL + '/data/pointSimplifier.csv',
+    csvUrl: PUBLIC_URL + '/data/pointSimplifier.csv',
+    excelUrl: PUBLIC_URL + '/data/pointSimplifier.xlsx',
   }, {
     title: '多线路展示',
     description: '路径规划',
     image: multiRoutesPng,
     path: '/gd/multi-routes',
-    downloadUrl: PUBLIC_URL + '/data/multiRoutes.csv',
+    csvUrl: PUBLIC_URL + '/data/multiRoutes.csv',
+    excelUrl: PUBLIC_URL + '/data/multiRoutes.xlsx',
   },
 ]
 
