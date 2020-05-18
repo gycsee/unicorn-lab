@@ -1,6 +1,6 @@
 import React from 'react';
 import { Map } from 'immutable';
-import { message, Collapse, Switch, Checkbox, Table, Badge, Typography, Tag, Form, Input } from 'antd';
+import { message, Collapse, Switch, Checkbox, Table, Typography, Tag, Form, Input, Tooltip } from 'antd';
 import XLSX from 'xlsx';
 import _ from 'lodash';
 import { createUseStyles } from 'react-jss';
@@ -67,7 +67,6 @@ const MultiRoutes = ({ mapStyle }) => {
     },
     data: {}
   }))
-  const [selectedRowKeys, setSelectedRowKeys] = React.useState([]);
 
   const markerEvents = {
     click: (e) => {
@@ -116,21 +115,10 @@ const MultiRoutes = ({ mapStyle }) => {
     setData(data.update('routes', item => item.map(route => ({...route, visible: !checked}))));
   }
 
-  const onSelectChange = selectedRowKeys => {
-    setSelectedRowKeys(selectedRowKeys);
-  }
-
   const getDownloadCsvData = () => {
     const routeIdIndex = data.get('columns').findIndex(item => item === 'routeId');
     const appearedIds = [];
-    return csvOrginData.filter((item, index) => {
-      if (index === 0) {
-        return true;
-      } else {
-        return selectedRowKeys.includes(item[routeIdIndex]);
-      }
-    })
-      .map((item, index) => {
+    return csvOrginData.map((item, index) => {
         if (index === 0) {
           return [...item, 'totalDistance'];
         } else {
@@ -188,7 +176,6 @@ const MultiRoutes = ({ mapStyle }) => {
         columns: [],
         routes: Map()
       }));
-      setSelectedRowKeys([]);
       setCsvOriginData([]);
       return null;
     }
@@ -232,7 +219,6 @@ const MultiRoutes = ({ mapStyle }) => {
       }));
     }
     setFile(f);
-    setSelectedRowKeys([]);
     setData(Map({
       columns,
       routes: routesData
@@ -252,7 +238,7 @@ const MultiRoutes = ({ mapStyle }) => {
       title: '线路',
       dataIndex: 'name',
       fixed: true,
-      width: '100px',
+      width: '140px',
       render: (text, record) => (
         <ColorPicker
           color={record.color}
@@ -266,7 +252,7 @@ const MultiRoutes = ({ mapStyle }) => {
       title: '里程(千米)',
       dataIndex: 'distanceArray',
       align: 'right',
-      width: '94px',
+      width: '92px',
       render: (text, record) => {
         return `${(text.reduce((a, c) => a + Number(c), 0))/1000}`
       }
@@ -373,26 +359,24 @@ const MultiRoutes = ({ mapStyle }) => {
                   size="small"
                   title={currentPageData => (
                     <div className={classes.tableHeader}>
-                      <div>
-                        <Badge count={selectedRowKeys.length} showZero>
-                          {file.name.endsWith('.xlsx')
-                            ? <DownloadExcel
+                      {file.name.endsWith('.xlsx')
+                        ? <Tooltip title='将会在下载的 Excel 文件中增加工作表“路线数据”展示每条线路总里程'>
+                            <DownloadExcel
                               onClick={getDownloadExcelData}
                               size="small"
                               filename={'new-' + file.name}
                               label='下载'
-                              disabled={selectedRowKeys.length === 0}
                             />
-                            : <DownloadCsv
+                          </Tooltip>
+                        : <Tooltip title='将会在下载的 CSV 文件中追加列“totalDistance”展示每条线路总里程'>
+                            <DownloadCsv
                               onClick={getDownloadCsvData}
                               size="small"
                               filename={'new-' + file.name}
                               label='下载'
-                              disabled={selectedRowKeys.length === 0}
                             />
-                          }
-                        </Badge>
-                      </div>
+                          </Tooltip>
+                      }
                       <div>
                         <Checkbox
                           indeterminate={!!visibleLength && visibleLength < data.get('routes').size}
@@ -408,10 +392,10 @@ const MultiRoutes = ({ mapStyle }) => {
                     return (
                       <tr>
                         <td colSpan={4}>
-                          已选择线路的总里程为：
+                          已显示线路的总里程为：
                           <Typography.Text type="danger">
-                            {selectedRowKeys.reduce(
-                              (a, c) => data.getIn(['routes', c, 'distanceArray']).reduce((aInner, cInner) => aInner + Number(cInner), 0) + a,
+                            {data.get('routes').filter(item => item.visible).toArray().reduce(
+                              (a, c) => c[1].distanceArray.reduce((aInner, cInner) => aInner + Number(cInner), 0) + a,
                               0
                             )/1000}
                           </Typography.Text>
@@ -421,12 +405,6 @@ const MultiRoutes = ({ mapStyle }) => {
                     )
                   }}
                   pagination={false}
-                  rowSelection={{
-                    fixed: true,
-                    columnWidth: '26px',
-                    selectedRowKeys,
-                    onChange: onSelectChange,
-                  }}
                   columns={tableColumns}
                   dataSource={data.get('routes').toArray().map(item => ({key: item[0], ...item[1]})).sort((a, b) => (a.index - b.index))}
                 />
