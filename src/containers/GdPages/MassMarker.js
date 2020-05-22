@@ -30,6 +30,31 @@ const useStyles = createUseStyles({
   }
 })
 
+// 生成随机颜色字符串
+var getRandomColor = function() {
+  return '#' + ('00000' + (Math.random() * 0x1000000 << 0).toString(16)).slice(-6);
+}
+
+// 生成随机点样式对象
+function getRandPointerStyle() {
+  const pointStyle = ['circle', 'rect'];
+  const color = getRandomColor();
+  const size = Number.parseInt(Math.random()*5) + 5; // 4-6
+  const style = Number.parseInt(Math.random()*2); // 0-1
+  return {
+    pointStyle: {
+      content: pointStyle[style],
+      fillStyle: color,
+      width: size,
+      height: size
+    },
+    pointHardcoreStyle: {
+      width: size - 2,
+      height: size - 2
+    }
+  };
+}
+
 const MassMarker = ({ mapStyle }) => {
   const classes = useStyles();
   const amap = React.useRef(null);
@@ -46,6 +71,7 @@ const MassMarker = ({ mapStyle }) => {
 
   const [columns, setColumns] = React.useState([]);
   const [groups, setGroups] = React.useState(Map());
+  const [groupStyles, setGroupStyles] = React.useState({});
   const [info, setInfo] = React.useState(Map({
     visible:  false,
     position: {
@@ -66,7 +92,8 @@ const MassMarker = ({ mapStyle }) => {
   const handleFileChange = async (parsedData, f) => {
     if (parsedData.length === 0) {
       setColumns([]);
-      setGroups(Map())
+      setGroups(Map());
+      setGroupStyles({})
       return null;
     }
     const [parsedDataColumns, ...rows] = parsedData;
@@ -80,9 +107,11 @@ const MassMarker = ({ mapStyle }) => {
     }
     
     let groupsMap = Map();
+    let groupStyleOptions = {}; // 点样式组
     if (licenseIndex !== -1) {
       const groups = _.groupBy(rows, row => row[licenseIndex]);
       Object.keys(groups).forEach((element, index) => {
+        groupStyleOptions[element] = getRandPointerStyle();// 样式组中增加样式
         groupsMap = groupsMap.set(element, {
           index,
           license: element,
@@ -95,6 +124,7 @@ const MassMarker = ({ mapStyle }) => {
         })
       });
     } else {
+      groupStyleOptions[''] = getRandPointerStyle();// 样式组中增加样式
       groupsMap.set('_one', {
         index: 0,
         license: '',
@@ -107,6 +137,7 @@ const MassMarker = ({ mapStyle }) => {
       })
     }
     setGroups(groupsMap);
+    setGroupStyles(groupStyleOptions)
     setColumns(parsedDataColumns);
     
   }
@@ -146,6 +177,7 @@ const MassMarker = ({ mapStyle }) => {
         <GdMap {...option} >
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
           {<GdPointSimplifier
+            groupStyles={groupStyles}
             data={groups.size
               ? _.concat(...groups.filter(item => item.visible).toArray().map(item => item[1].data))
               : []

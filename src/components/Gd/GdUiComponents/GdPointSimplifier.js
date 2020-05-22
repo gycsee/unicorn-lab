@@ -27,16 +27,11 @@ function getRandPointerStyle() {
 }
 
 
-const GdPointSimplifier = ({ __map__, data }) => {
+const GdPointSimplifier = ({ __map__, data, groupStyles }) => {
   const pointSimplifierIns = React.useRef(null);
   React.useEffect(() => {
     const initPage = (PointSimplifier) => {
       const map = __map__;
-      const groupStyleOptions = {}; // 点样式组
-      _.uniqBy(data, 'license').forEach((element, index) => {
-        groupStyleOptions[element.license] = getRandPointerStyle();// 样式组中增加样式
-      });
-      
       pointSimplifierIns.current = new PointSimplifier({
         map: map, //关联的map
         autoSetFitView: true,
@@ -64,7 +59,7 @@ const GdPointSimplifier = ({ __map__, data }) => {
           getGroupId: function (item, idx) {
             return item.license
           },
-          groupStyleOptions: groupStyleOptions
+          groupStyleOptions: groupStyles
         }
       });
   
@@ -83,17 +78,12 @@ const GdPointSimplifier = ({ __map__, data }) => {
       })
     } else {
       let renderOptions = pointSimplifierIns.current.getRenderOptions();
-      const groupStyleOptions = {}; // 点样式组
-  
-      _.uniqBy(data, 'license').forEach((element, index) => {
-        groupStyleOptions[element.license] = getRandPointerStyle();// 样式组中增加样式
-      });
-      renderOptions.groupStyleOptions = groupStyleOptions;
+      renderOptions.groupStyleOptions = groupStyles;
       pointSimplifierIns.current.setData(data);
 
       pointSimplifierIns.current.render();
     }
-  }, [__map__, data])
+  }, [__map__, data, groupStyles])
   return null;
 }
 
