@@ -14,7 +14,7 @@ const ExcelDropzone = ({
         var data = new Uint8Array(e.target.result);
         var workbook = XLSX.read(data, { type: 'array' });
         const first_worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(first_worksheet, { header: 1, raw: false });
+        const rows = XLSX.utils.sheet_to_json(first_worksheet, { header: 1, raw: false, blankrows: false });
         onChange(rows, f)
       };
       reader.readAsArrayBuffer(f);
