@@ -4,6 +4,7 @@ import { Col, Row } from 'antd';
 import Card from 'components/Card';
 import massMarkerPng from 'assets/images/massMarker.png';
 import multiRoutesPng from 'assets/images/multiRoutes.png';
+import markerLabersPng from 'assets/images/markerLabers.png';
 
 const PUBLIC_URL = process.env.PUBLIC_URL;
 
@@ -22,6 +23,13 @@ const cards = [
     path: '/gd/multi-routes',
     csvUrl: PUBLIC_URL + '/data/multiRoutes.csv',
     excelUrl: PUBLIC_URL + '/data/multiRoutes.xlsx',
+  }, {
+    title: '散点/文字',
+    description: '带有文字的散点标注，并根据zone(例如行政区)进行点分类',
+    image: markerLabersPng,
+    path: '/gd/mass-label',
+    csvUrl: PUBLIC_URL + '/data/markerLabers.csv',
+    excelUrl: PUBLIC_URL + '/data/markerLabers.xlsx',
   },
 ]
 

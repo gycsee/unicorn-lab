@@ -6,6 +6,7 @@ const MassMarker = loadable(() => import('./MassMarker'));
 const SingleRoute = loadable(() => import('./SingleRoute'));
 const DoubleRoutes = loadable(() => import('./DoubleRoutes'));
 const MultiRoutes = loadable(() => import('./MultiRoutes'));
+const MassLabel = loadable(() => import('./MassLabel'));
 
 const GdPages = () => {
   let { path, url } = useRouteMatch();
@@ -25,6 +26,9 @@ const GdPages = () => {
       </Route>
       <Route path={`${url}/multi-routes`} >
         <MultiRoutes />
+      </Route>
+      <Route path={`${url}/mass-label`} >
+        <MassLabel />
       </Route>
     </Switch>
   );
