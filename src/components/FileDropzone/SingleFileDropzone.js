@@ -31,6 +31,9 @@ const useStyles = createUseStyles({
     marginTop: '8px',
     marginBottom: '8px',
   },
+  Tag: {
+    whiteSpace: 'break-spaces',
+  }
 });
 
 const SingleFileDropzone = ({
@@ -75,7 +78,7 @@ const SingleFileDropzone = ({
       </div>
 
       {file && <div className={classes.file}>
-        <Tag icon={fileIcon} color="blue" closable={true} onClose={handleFileRemove}>
+        <Tag className={classes.Tag} icon={fileIcon} color="blue" closable={true} onClose={handleFileRemove}>
           {file.name}
         </Tag>
       </div>}
