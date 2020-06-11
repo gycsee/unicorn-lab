@@ -132,7 +132,7 @@ const StaticMassLabel = ({ mapStyle }) => {
     }
 
     if (data.get('groups').size === 0) {
-      d3.csv('https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabers.csv').then(res => {
+      d3.csv('https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabels.csv').then(res => {
         handleFileChange(res)
       });
     }
