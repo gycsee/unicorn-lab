@@ -141,11 +141,6 @@ const StaticMassLabel = ({ mapStyle }) => {
   
 
   const markersEvents = {
-    created: (instance) => {
-      if (amap.current) {
-        amap.current.setFitView();
-      }
-    },
     click: (MapsOption, marker) => {
       const position = marker.getPosition();
       const extData = marker.getExtData();
@@ -200,7 +195,7 @@ const StaticMassLabel = ({ mapStyle }) => {
 
   return (
     <GdLayout>
-      <GdMap {...option} >
+      <GdMap zoom={11} {...option} >
         <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
         <GdSetting defaultMapStyle={'whitesmoke'} />
         <Markers markers={visible.get('marker') ? filteredData : []} render={renderCircleMarker}/>
