@@ -152,9 +152,10 @@ const StaticMassLabel = ({ mapStyle }) => {
       const row = extData.row;
       let infoData = {};
       data.get('columns')
-        .filter(item => !['longitude', 'latitude'].includes(item))
         .forEach((column, index) => {
-          infoData[column] = row[index];
+          if (!['longitude', 'latitude'].includes(column)) {
+            infoData[column] = row[index];
+          }
         });
       setInfo(info.merge({
         position: {
