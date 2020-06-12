@@ -245,7 +245,7 @@ const StaticMassLabel = ({ mapStyle }) => {
   return (
     <GdLayout>
       <GdContent>
-        <GdMap {...option} >
+        <GdMap zoom={11} {...option} >
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
           <GdSetting defaultMapStyle={'whitesmoke'} />
           <Markers markers={visible.get('marker') ? filteredData : []} render={renderCircleMarker}/>
