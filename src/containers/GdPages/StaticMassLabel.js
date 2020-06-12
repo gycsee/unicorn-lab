@@ -1,18 +1,21 @@
 import React from 'react';
 import { Map } from 'immutable';
 import { Markers } from 'react-amap'
-import { message } from 'antd';
+import { message, Collapse, Switch, Checkbox, Table, Form, Input, Space, Tag } from 'antd';
 import _ from 'lodash';
 import { createUseStyles } from 'react-jss';
 import * as d3 from 'd3-fetch';
 
 import {
   GdLayout,
+  GdContent,
   GdMap,
+  GdPanel,
   GdInfoWindow,
   GdSetting,
 } from 'components/Gd';
-
+import SampleDataCard from 'components/SampleDataViewer/SampleDataCard';
+import ColorPicker from "components/ColorPicker";
 import { getColorCategories } from 'common/util';
 
 const useStyles = createUseStyles({
@@ -138,7 +141,13 @@ const StaticMassLabel = ({ mapStyle }) => {
     }
   }, [])
 
-  
+  const onVisibleChange = key => (checked, event) => {
+    setData(data.mergeIn(['groups', key], { visible: checked }));
+  }
+
+  const allVisibleTriggle = checked => e => {
+    setData(data.set('groups', data.get('groups').map(item => ({...item, visible: !checked}))));
+  }  
 
   const markersEvents = {
     click: (MapsOption, marker) => {
@@ -163,6 +172,10 @@ const StaticMassLabel = ({ mapStyle }) => {
     },
   }
 
+  const handleMarkersVisibleChange = key => (checked, event) => {
+    setVisible(visible.set(key, checked))
+  }
+
   const renderCircleMarker = (extData) => <div className={classes.markerContent} style={{ background: extData.color }} />
   const renderLabelMarker = (extData) => <div className={classes.labelMarkerContent} style={{ background: extData.color }}>{extData.label}</div>
 
@@ -172,6 +185,42 @@ const StaticMassLabel = ({ mapStyle }) => {
       click: () => setInfo(info.set('visible', false))
     },
   }
+
+  const onColorChange = key => (color) => {
+    setData(data.mergeIn(['groups', key], { color: color }));
+  }
+
+  const tableColumns = [
+    {
+      title: 'zone',
+      dataIndex: 'zone',
+      fixed: true,
+      width: '140px',
+      render: (text, record) => (
+        <ColorPicker
+          color={record.color}
+          type="sketch"
+          onChangeComplete={onColorChange(text)}
+        >
+          <Tag color={record.color}>{text}</Tag>
+        </ColorPicker>
+      )
+    }, {
+      title: '显示',
+      dataIndex: 'visible',
+      render: (text, record) => (
+        <Switch
+          size="small"
+          checked={text}
+          onChange={onVisibleChange(record.zone)}
+        />
+      )
+    }
+  ]
+
+  const visibleGroupLength = data.get('groups').size
+    ? data.get('groups').filter(item => item.visible).size
+    : 0;
 
   const columns = data.get('columns');
   const longitudeIndex = columns.findIndex(item => item === 'longitude');
@@ -195,12 +244,65 @@ const StaticMassLabel = ({ mapStyle }) => {
 
   return (
     <GdLayout>
-      <GdMap zoom={11} {...option} >
-        <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
-        <GdSetting defaultMapStyle={'whitesmoke'} />
-        <Markers markers={visible.get('marker') ? filteredData : []} render={renderCircleMarker}/>
-        <Markers markers={visible.get('label') ? filteredData : []} events={markersEvents} render={renderLabelMarker}/>
-      </GdMap>
+      <GdContent>
+        <GdMap {...option} >
+          <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
+          <GdSetting defaultMapStyle={'whitesmoke'} />
+          <Markers markers={visible.get('marker') ? filteredData : []} render={renderCircleMarker}/>
+          <Markers markers={visible.get('label') ? filteredData : []} events={markersEvents} render={renderLabelMarker}/>
+        </GdMap>
+      </GdContent>
+      <GdPanel>
+        <Collapse defaultActiveKey={['file', 'columns', 'groups']} >
+          <Collapse.Panel key="file" header="数据文件">
+            <SampleDataCard
+              className={classes.SampleDataCard}
+              csvUrl="https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabels.csv"
+              title="散点/文字"
+            />
+          </Collapse.Panel>
+          <Collapse.Panel key="groups" header="海量点分组">
+            {data.get('groups').size > 1
+              ? (
+                <Table
+                  size="small"
+                  title={currentPageData => (
+                    <div className={classes.tableHeader}>
+                      <Space>
+                        <Checkbox
+                          indeterminate={!!visibleGroupLength && visibleGroupLength < data.get('groups').size}
+                          checked={visibleGroupLength === data.get('groups').size}
+                          onChange={allVisibleTriggle(visibleGroupLength === data.get('groups').size)}
+                        >
+                          全显示
+                        </Checkbox>
+                        <Switch
+                          size="small"
+                          checkedChildren="显示圆点"
+                          unCheckedChildren="隐藏圆点"
+                          checked={visible.get('marker')}
+                          onChange={handleMarkersVisibleChange('marker')}
+                        />
+                        <Switch
+                          size="small"
+                          checkedChildren="显示文字"
+                          unCheckedChildren="隐藏文字"
+                          checked={visible.get('label')}
+                          onChange={handleMarkersVisibleChange('label')}
+                        />
+                      </Space>
+                    </div>
+                  )}
+                  pagination={false}
+                  columns={tableColumns}
+                  dataSource={data.get('groups').toArray().map(item => ({key: item[0], ...item[1]})).sort((a, b) => (a.index - b.index))}
+                />
+              )
+              : '请先参考模版文件上传数据'
+            }
+          </Collapse.Panel>
+        </Collapse>
+      </GdPanel>
     </GdLayout>
   );
 }

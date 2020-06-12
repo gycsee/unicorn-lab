@@ -14,7 +14,7 @@ const SampleDataCard = ({
       style={{ width: '100%' }}
       actions={[
         <Button key='csv' type="link" href={csvUrl} icon={<DownloadOutlined />}>CSV</Button>,
-        <Button key='excel' type="link" href={excelUrl} icon={<DownloadOutlined />}>Excel</Button>,
+        excelUrl ? <Button key='excel' type="link" href={excelUrl} icon={<DownloadOutlined />}>Excel</Button> : null,
         <SampleCsvModal
           key='view'
           label={'查看'}
