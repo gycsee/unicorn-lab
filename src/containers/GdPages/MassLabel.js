@@ -170,7 +170,7 @@ const MassLabel = ({ mapStyle }) => {
   }
 
   const renderCircleMarker = (extData) => <div className={classes.markerContent} style={{ background: extData.color }} />
-  const renderLabelMarker = (extData) => <div className={classes.labelMarkerContent} style={{ background: extData.color }}>{extData.label}</div>
+  const renderLabelMarker = (extData) => <div className={classes.labelMarkerContent} style={{ background: extData.color, whiteSpace: 'nowrap' }}>{extData.label}</div>
 
   const option = {
     events: {
@@ -301,7 +301,7 @@ const MassLabel = ({ mapStyle }) => {
             </Form>
           </Collapse.Panel>
           <Collapse.Panel key="groups" header="海量点分组">
-            {data.get('groups').size > 1
+            {data.get('groups').size >= 1
               ? (
                 <Table
                   size="small"
