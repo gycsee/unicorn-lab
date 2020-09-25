@@ -135,7 +135,7 @@ const StaticMassLabel = ({ mapStyle }) => {
     }
 
     if (data.get('groups').size === 0) {
-      d3.csv('https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabels.csv').then(res => {
+      d3.csv('https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabels-0925.csv').then(res => {
         handleFileChange(res)
       });
     }
@@ -257,7 +257,7 @@ const StaticMassLabel = ({ mapStyle }) => {
           <Collapse.Panel key="file" header="数据文件">
             <SampleDataCard
               className={classes.SampleDataCard}
-              csvUrl="https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabels.csv"
+              csvUrl="https://unicorn-rel.oss-cn-beijing.aliyuncs.com/companies/mnsm/markerLabels-0925.csv"
               title="散点/文字"
             />
           </Collapse.Panel>
