@@ -13,10 +13,13 @@ import {
   GdSetting,
 } from 'components/Gd';
 import SampleDataCard from 'components/SampleDataViewer/SampleDataCard';
-import {
-  GdPointSimplifier,
-} from 'components/Gd/GdUiComponents';
 import CsvExcelDropzone from 'components/FileDropzone/CsvExcelDropzone';
+import {
+  GdLocal,
+  LabelsLayer,
+  ScatterPointLayer,
+} from 'components/Gd/GdLocalComponents';
+import { getColorCategories } from 'common/util';
 
 const useStyles = createUseStyles({
   tableHeader: {
@@ -30,32 +33,7 @@ const useStyles = createUseStyles({
   }
 })
 
-// 生成随机颜色字符串
-var getRandomColor = function() {
-  return '#' + ('00000' + (Math.random() * 0x1000000 << 0).toString(16)).slice(-6);
-}
-
-// 生成随机点样式对象
-function getRandPointerStyle() {
-  const pointStyle = ['circle', 'rect'];
-  const color = getRandomColor();
-  const size = Number.parseInt(Math.random()*5) + 5; // 4-6
-  const style = Number.parseInt(Math.random()*2); // 0-1
-  return {
-    pointStyle: {
-      content: pointStyle[style],
-      fillStyle: color,
-      width: size,
-      height: size
-    },
-    pointHardcoreStyle: {
-      width: size - 2,
-      height: size - 2
-    }
-  };
-}
-
-const MassMarker = ({ mapStyle }) => {
+const MassLabel = ({ mapStyle }) => {
   const classes = useStyles();
   const amap = React.useRef(null);
   const amapCreateEvent = React.useCallback((mapInstance) => {
@@ -69,8 +47,10 @@ const MassMarker = ({ mapStyle }) => {
     }
   }, [])
 
-  const [groups, setGroups] = React.useState(Map());
-  const [groupStyles, setGroupStyles] = React.useState({});
+  const [data, setData] = React.useState(Map({
+    columns: [],
+    groups: Map(),
+  }));
   const [info, setInfo] = React.useState(Map({
     visible:  false,
     position: {
@@ -81,65 +61,61 @@ const MassMarker = ({ mapStyle }) => {
   }))
 
   const onVisibleChange = key => (checked, event) => {
-    setGroups(groups.mergeIn([key], { visible: checked }));
+    setData(data.mergeIn(['groups', key], { visible: checked }));
   }
 
   const allVisibleTriggle = checked => e => {
-    setGroups(groups.map(item => ({...item, visible: !checked})));
+    setData(data.set('groups', data.get('groups').map(item => ({...item, visible: !checked}))));
   }
 
   const handleFileChange = async (parsedData, f) => {
     if (parsedData.length === 0) {
-      setGroups(Map());
-      setGroupStyles({})
+      setData(Map({
+        columns: [],
+        groups: Map(),
+      }));
       return null;
     }
-    const [parsedDataColumns, ...rows] = parsedData;
-    console.table(parsedData);
-    const longitudeIndex = parsedDataColumns.findIndex(item => item === 'longitude');
-    const latitudeIndex = parsedDataColumns.findIndex(item => item === 'latitude');
-    const licenseIndex = parsedDataColumns.findIndex(item => item === 'license');
-    if (longitudeIndex === -1 || latitudeIndex === -1) {
-      message.error('请确保csv中存在以下列：longitude、latitude');
+    const [columns, ...rows] = parsedData;
+    const longitudeIndex = columns.findIndex(item => item === 'longitude');
+    const latitudeIndex = columns.findIndex(item => item === 'latitude');
+    const storeIdIndex = columns.findIndex(item => item === 'storeId');
+    const zoneIndex = columns.findIndex(item => item === 'zone');
+    if (longitudeIndex === -1 || latitudeIndex === -1 || storeIdIndex === -1 || zoneIndex === -1) {
+      message.error('请确保csv中存在以下列：storeId、zone、longitude、latitude');
       return null;
     }
     
     let groupsMap = Map();
-    let groupStyleOptions = {}; // 点样式组
-    if (licenseIndex !== -1) {
-      const groups = _.groupBy(rows, row => row[licenseIndex]);
-      Object.keys(groups).forEach((element, index) => {
-        groupStyleOptions[element] = getRandPointerStyle();// 样式组中增加样式
-        groupsMap = groupsMap.set(element, {
+    if (zoneIndex !== -1) {
+      const groups = _.groupBy(rows, row => row[zoneIndex]);
+      const zones = Object.keys(groups);
+      const colors = getColorCategories(zones.length);
+      zones.forEach((zone, index) => {
+        groupsMap = groupsMap.set(zone, {
           index,
-          license: element,
           visible: true,
-          data: groups[element].map(item => ({
-            longitude: item[longitudeIndex],
-            latitude: item[latitudeIndex],
-            license: item[licenseIndex],
-          }))
+          zone: zone,
+          color: colors[index],
+          data: groups[zone]
         })
       });
     } else {
-      groupStyleOptions[''] = getRandPointerStyle();// 样式组中增加样式
       groupsMap.set('_one', {
         index: 0,
-        license: '',
         visible: true,
-        data: rows.map(item => ({
-          longitude: item[longitudeIndex],
-          latitude: item[latitudeIndex],
-          license: item[licenseIndex],
-        }))
+        zone: '',
+        color: 'red',
+        data: rows
       })
     }
-    setGroups(groupsMap);
-    setGroupStyles(groupStyleOptions)
+    setData(Map({
+      columns,
+      groups: groupsMap
+    }));
   }
 
   const option = {
-    useAMapUI: () => { console.log("AMapUI Loaded Done") },
     events: {
       created: amapCreateEvent,
       click: () => setInfo(info.set('visible', false))
@@ -148,8 +124,8 @@ const MassMarker = ({ mapStyle }) => {
 
   const tableColumns = [
     {
-      title: 'license',
-      dataIndex: 'license',
+      title: 'zone',
+      dataIndex: 'zone',
     }, {
       title: '显示',
       dataIndex: 'visible',
@@ -157,29 +133,38 @@ const MassMarker = ({ mapStyle }) => {
         <Switch
           size="small"
           checked={text}
-          onChange={onVisibleChange(record.license)}
+          onChange={onVisibleChange(record.zone)}
         />
       )
     }
   ]
 
-  const visibleGroupLength = groups.size
-    ? groups.filter(item => item.visible).size
+  const visibleGroupLength = data.get('groups').size
+    ? data.get('groups').filter(item => item.visible).size
     : 0;
 
+  const columns = data.get('columns');
+  const longitudeIndex = columns.findIndex(item => item === 'longitude');
+  const latitudeIndex = columns.findIndex(item => item === 'latitude');
+  const storeIdIndex = columns.findIndex(item => item === 'storeId');
+
+  const filteredData = data.get('groups').size
+    ? _.concat(...data.get('groups').filter(item => item.visible).toArray().map(item => {
+      const { color, data: rowData } = item[1];
+      return rowData.map(row => ({ color, label: row[storeIdIndex], lnglat: [Number(row[longitudeIndex]), Number(row[latitudeIndex])]}))
+    }))
+    : [];
+  
   return (
     <GdLayout>
       <GdContent>
         <GdMap {...option} >
           <GdInfoWindow position={info.get('position')} visible={info.get('visible')} data={info.get('data')} />
-          {<GdPointSimplifier
-            groupStyles={groupStyles}
-            data={groups.size
-              ? _.concat(...groups.filter(item => item.visible).toArray().map(item => item[1].data))
-              : []
-            }
-          />}
           <GdSetting defaultMapStyle={'whitesmoke'} />
+          <GdLocal >
+            {filteredData.length && <LabelsLayer data={filteredData}/>}
+            {filteredData.length && <ScatterPointLayer data={filteredData}/>}
+          </GdLocal>
         </GdMap>
       </GdContent>
       <GdPanel>
@@ -229,7 +214,7 @@ const MassMarker = ({ mapStyle }) => {
             </Form>
           </Collapse.Panel>
           <Collapse.Panel key="groups" header="海量点分组">
-            {groups.size > 1
+            {data.get('groups').size > 1
               ? (
                 <Table
                   size="small"
@@ -237,9 +222,9 @@ const MassMarker = ({ mapStyle }) => {
                     <div className={classes.tableHeader}>
                       <div>
                         <Checkbox
-                          indeterminate={!!visibleGroupLength && visibleGroupLength < groups.size}
-                          checked={visibleGroupLength === groups.size}
-                          onChange={allVisibleTriggle(visibleGroupLength === groups.size)}
+                          indeterminate={!!visibleGroupLength && visibleGroupLength < data.get('groups').size}
+                          checked={visibleGroupLength === data.get('groups').size}
+                          onChange={allVisibleTriggle(visibleGroupLength === data.get('groups').size)}
                         >
                           全显示
                         </Checkbox>
@@ -249,7 +234,7 @@ const MassMarker = ({ mapStyle }) => {
                   pagination={false}
                   columns={tableColumns}
                   scroll={{ y: 400 }}
-                  dataSource={groups.toArray().map(item => ({key: item[0], ...item[1]})).sort((a, b) => (a.index - b.index))}
+                  dataSource={data.get('groups').toArray().map(item => ({key: item[0], ...item[1]})).sort((a, b) => (a.index - b.index))}
                 />
               )
               : '请先参考模版文件上传数据'
@@ -261,4 +246,4 @@ const MassMarker = ({ mapStyle }) => {
   );
 }
 
-export default MassMarker;
+export default MassLabel;

@@ -5,8 +5,40 @@
  * @param {Number} num 颜色种类数
  */
 export const getColorCategories = (num = 0) => {
-	const defaultColors = ['#0000d6', '#008b00', '#880061', '#e54304', '#7e3ff2', '#aaf255', '#916eff', '#df55f2', '#ef4fa6', '#ffaf49'];
-	if (num <= 10) {
+	const defaultColors = [
+		'#0000d6',
+		'#008b00',
+		'#880061',
+		'#e54304',
+		'#7e3ff2',
+		'#1A237E',
+		'#9E9D24',
+		'#df55f2',
+		'#5D4037',
+		'#ffaf49',
+		'#3F51B5',
+		'#00C853',
+		'#F50057',
+		'#FFAB91',
+		'#B388FF',
+		'#7CB342',
+		'#5C6BC0',
+		'#ef4fa6',
+		'#BDBDBD',
+		'#A1887F',
+		'#2196F3',
+		'#1B5E20',
+		'#B71C1C',
+		'#F57C00',
+		'#AA00FF',
+		'#1DE9B6',
+		'#9FA8DA',
+		'#C2185B',
+		'#757575',
+		'#78909C',
+		'#AEEA00',
+	];
+	if (num <= defaultColors.length) {
 		return defaultColors.slice(0, num);
 	}
 	const red 			= 128;
@@ -41,4 +73,21 @@ export const getColorCategories = (num = 0) => {
 		}
 	}
 	return colors;
+}
+
+/**
+ * 计算字符串字节长度，Unicode 不在 0-128 范围内的 x2
+ * @param {String} str 
+ */
+export const getByteLen = (str) => {
+	var len = 0;
+    for (var i = 0; i < str.length; i++) {
+        var length = str.charCodeAt(i);
+        if (length >= 0 && length <= 128) {
+            len += 1;
+        } else {
+            len += 2;
+        }
+    }
+    return len;
 }

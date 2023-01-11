@@ -14,6 +14,7 @@ const GdRoute = ({
   name,
   visible,
   color,
+  columns,
   markers,
   path,
   distanceArray = [],
@@ -40,10 +41,17 @@ const GdRoute = ({
         }
     });
   });
+
+  const longitudeIndex = columns.findIndex(item => item === 'longitude');
+  const latitudeIndex = columns.findIndex(item => item === 'latitude');
   return (
     <>
       {markers.map((markerItem, index) => {
-        const { longitude, latitude, ...restData } = markerItem
+        const longitude = markerItem[longitudeIndex];
+        const latitude = markerItem[latitudeIndex];
+        if (Number.isNaN(Number(longitude)) || Number.isNaN(Number(latitude))) {
+          return null;
+        }
         const position = { longitude, latitude };
         let radius =  16;
         let zIndex =  100;
@@ -60,7 +68,10 @@ const GdRoute = ({
           zIndex = 101;
         }
         const offSet = -(radius / 2);
-        const extData = { longitude, latitude, ...restData }
+        let extData = {};
+        columns.forEach((column, columnIndex) => {
+          extData[column] = markerItem[columnIndex];
+        });
         return (
           <Marker
             key={index}

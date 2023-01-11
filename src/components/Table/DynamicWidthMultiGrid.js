@@ -4,10 +4,11 @@ import { withStyles } from 'react-jss';
 import classnames from 'classnames';
 
 const styles = {
-  BodyGrid: {
+  TopRightGrid: {
+    backgroundColor: '#eaeaea',
+  },
+  noOutline: {
     outline: 'none',
-    width: '100%',
-    border: '1px solid #e0e0e0',
   },
   evenRow: {
     borderBottom: '1px solid #e0e0e0',
@@ -23,7 +24,6 @@ const styles = {
     flexDirection: 'column',
     justifyDontent: 'center',
     padding: '0.5em 1em',
-    borderRight: '1px solid #e0e0e0',
     borderBottom: '1px solid #e0e0e0',
   },
 }
@@ -52,7 +52,7 @@ class DynamicWidthMultiGrid extends React.PureComponent {
   _cellRenderer = ({columnIndex, isScrolling, key, parent, rowIndex, style}) => {
     const { list } = this.props;
     const classname = this.getClassName({columnIndex , rowIndex});
-    const content = isScrolling ? '...' : list[rowIndex][columnIndex];
+    const content = list[rowIndex][columnIndex];
 
     return (
       <CellMeasurer
@@ -79,7 +79,7 @@ class DynamicWidthMultiGrid extends React.PureComponent {
 
     return (
       <MultiGrid
-        className={classes.BodyGrid}
+        classNameTopRightGrid={classnames(classes.noOutline, classes.TopRightGrid)}
         columnCount={columnCount}
         columnWidth={this._cache.columnWidth}
         deferredMeasurementCache={this._cache}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radio, Checkbox, Button, Popover, Divider } from 'antd';
+import { Radio, Checkbox, Button, Popover, Divider, FloatButton } from 'antd';
 import {
   SettingFilled,
 } from '@ant-design/icons';
@@ -25,12 +25,6 @@ const featureOptions = [
   { label: '建筑物', value: 'building'},
 ]
 const useStyles = createUseStyles({
-  root: {
-    position: 'absolute',
-    right: '10px',
-    top: '20px',
-    zIndex: 150,
-  },
   Popover: {
     maxWidth: 400,
   },
@@ -102,10 +96,20 @@ const GdSetting = ({
       title={false}
       trigger="click"
       content={panel}
-      visible={visible}
+      open={visible}
       {...popoverProps}
     >
-      <Button onClick={visibleTriggle} className={classes.root} shape="circle" icon={<SettingFilled style={{ color: '#177ddc'}} />} />
+      <Button
+        onClick={visibleTriggle}
+        style={{
+          position: 'absolute',
+          right: '10px',
+          top: '20px',
+          zIndex: 150,
+        }}
+        shape="circle"
+        icon={<SettingFilled />}
+      />
     </Popover>
   );
 }
