@@ -1,24 +1,34 @@
 import 'react-app-polyfill/ie11';
 import 'react-app-polyfill/stable';
-import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
-import moment from 'moment';
-import 'moment/locale/zh-cn';
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/es/locale/zh_CN';
+import { ConfigProvider, theme } from 'antd';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+import zhCN from 'antd/locale/zh_CN';
+import 'antd/dist/reset.css';
+import { StyleProvider } from '@ant-design/cssinjs';
 
 import App from 'containers/App';
 import * as serviceWorker from './serviceWorker';
 
-moment.locale('zh-cn');
+dayjs.locale('zh-cn');
+const { darkAlgorithm, compactAlgorithm } = theme;
 
 ReactDOM.render(
-  <ConfigProvider locale={zhCN}>
-    <Router>
-      <App />
-    </Router>
-  </ConfigProvider>,
+  // 由于 antd 组件的默认文案是英文，所以需要修改为中文
+  <StyleProvider hashPriority="high">
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        algorithm: [darkAlgorithm, compactAlgorithm],
+      }}
+    >
+      <Router>
+        <App />
+      </Router>
+    </ConfigProvider>
+  </StyleProvider>,
   document.getElementById('root')
 );
 

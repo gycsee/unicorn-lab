@@ -39,7 +39,7 @@ const SampleCsv = ({
       </Button>
       <Modal
         title="示例数据"
-        visible={visible}
+        open={visible}
         footer={null}
         centered={true}
         width={900}
