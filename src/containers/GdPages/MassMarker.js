@@ -69,7 +69,6 @@ const MassMarker = ({ mapStyle }) => {
     }
   }, [])
 
-  const [columns, setColumns] = React.useState([]);
   const [groups, setGroups] = React.useState(Map());
   const [groupStyles, setGroupStyles] = React.useState({});
   const [info, setInfo] = React.useState(Map({
@@ -91,7 +90,6 @@ const MassMarker = ({ mapStyle }) => {
 
   const handleFileChange = async (parsedData, f) => {
     if (parsedData.length === 0) {
-      setColumns([]);
       setGroups(Map());
       setGroupStyles({})
       return null;
@@ -138,8 +136,6 @@ const MassMarker = ({ mapStyle }) => {
     }
     setGroups(groupsMap);
     setGroupStyles(groupStyleOptions)
-    setColumns(parsedDataColumns);
-    
   }
 
   const option = {
